@@ -10,7 +10,7 @@ function App() {
     { id: 3, name: "Headphones", price: 100 },
     { id: 4, name: "Smartwatch", price: 150 },
   ];
-  const FREE_GIFT = { id: 99, name: "Wireless Mouse", price: 0 }; 
+  const FREE_GIFT = { id: 99, name: "Wireless Mouse", price: 0 };
   const THRESHOLD = 1000;
   const [count, setCount] = useState(0);
   const [cart, setCart] = useState([]);
@@ -24,14 +24,14 @@ function App() {
     );
     setSubTotal(Total);
 
-    if (Total >= THRESHOLD) {
-      if (!cart.find((item) => item.id == 99)) {
-        setCart((prevCart) => [...prevCart, { ...FREE_GIFT, quantity: 1 }]);
-        setShowGiftMessage(true);
-      } else {
-        //setCart((prevCart) => prevCart.filter((item) => item.id !== 99));
-        setShowGiftMessage(false);
-      }
+    const giftExists = cart.some((item) => item.id === 99);
+
+    if (Total >= THRESHOLD && !giftExists) {
+      setCart((prevCart) => [...prevCart, { ...FREE_GIFT, quantity: 1 }]);
+      setShowGiftMessage(true);
+    } else if (Total < THRESHOLD && giftExists) {
+      setCart((prevCart) => prevCart.filter((item) => item.id !== 99));
+      setShowGiftMessage(false);
     }
   }, [cart]);
 
@@ -53,7 +53,6 @@ function App() {
     setCart((prevCart) => prevCart.filter((item) => item.id !== product.id));
   };
   const update = (product, type) => {
-    console.log(product, type);
     if (type == "add") {
       setCart((prevCart) => {
         return prevCart.map((item) =>
@@ -65,7 +64,7 @@ function App() {
     } else {
       setCart((prevCart) => {
         return prevCart.map((item) =>
-          item.id === product.id
+          item.id === product.id && item.quantity > 1
             ? { ...item, quantity: item.quantity - 1 }
             : item
         );
@@ -90,31 +89,28 @@ function App() {
       <h1>Shopping cart</h1>
 
       <h2>{SubTotal}</h2>
-      <p>{SubTotal > THRESHOLD ? `Yeah You Won Free Gif` : ``}</p>
+      <p>
+        {SubTotal < THRESHOLD
+          ? `Rs${THRESHOLD - SubTotal} more for a free gift!`
+          : "You unlocked a free gift!"}
+      </p>
+      {showGiftMessage && <p> Free Gift Added!</p>}
       <div>
         {cart.map((product) => (
           <div key={product.id}>
             <span>
               {product.name}-{product.quantity}-Rs{product.price}
             </span>
-            <button onClick={() => Remove(product)}>Remove</button>
-            <button onClick={() => update(product, "add")}>+</button>
-            <button onClick={() => update(product, "remove")}>-</button>
+            {product.id !== 99 && (
+              <>
+                <button onClick={() => Remove(product)}>Remove</button>
+                <button onClick={() => update(product, "add")}>+</button>
+                <button onClick={() => update(product, "remove")}>-</button>
+              </>
+            )}
           </div>
         ))}
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </>
   );
 }
